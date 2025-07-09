@@ -217,12 +217,14 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   const selectedItems = {};
   const totalEl = document.getElementById('totalAmount');
   const selectedItemsEl = document.getElementById('selectedItems');
   const paymentSelect = document.getElementById('paymentSelect');
   const upiLink = document.getElementById('upiPayLink');
+  const orderForm = document.getElementById('orderForm');
 
   const toast = new bootstrap.Toast(document.getElementById('addToast'), {
     delay: 2000, autohide: true
@@ -287,14 +289,36 @@
 
   paymentSelect.addEventListener('change', updateBill);
 
-  document.getElementById('orderForm').addEventListener('submit', function(e) {
+  orderForm.addEventListener('submit', function(e) {
     e.preventDefault();
     if (Object.keys(selectedItems).length === 0) {
       alert("Please add items to your order.");
       return;
     }
-    document.getElementById("orderPopup").style.display = "flex";
+
+    const tableId = "<?= $table_id ?>";
+    const items = Object.values(selectedItems).map(item => `${item.name} x${item.quantity}`).join(', ');
+    const total = totalEl.innerText;
+
+    fetch('place_order.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `table_id=${encodeURIComponent(tableId)}&items=${encodeURIComponent(items)}&total=${encodeURIComponent(total)}`
+    })
+    .then(response => response.text())
+    .then(data => {
+      console.log("Order placed:", data);
+      document.getElementById('orderPopup').style.display = 'flex';
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert("Order failed.");
+    });
   });
 </script>
+
+
 </body>
 </html>
